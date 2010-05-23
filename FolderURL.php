@@ -27,18 +27,18 @@
 
 class FolderURL extends Controller
 {
-	private $arrKeywords;
+
+	protected $arrKeywords;
 	
 	public function __construct()
 	{
 		parent::__construct();
 		
-		// Known TYPOlight keywords
-		$GLOBALS['TL_CONFIG']['urlKeywords'] .= (strlen(trim($GLOBALS['TL_CONFIG']['urlKeywords'])) ? ',' : '') . 'items, articles, events, page';
-		
 		// Module Photoalbums
 		if (in_array('photoalbums', $this->Config->getActiveModules()))
+		{
 			$GLOBALS['URL_KEYWORDS'][] = 'albums';
+		}
 		
 		// Module Forum/Helpdesk
 		if (in_array('helpdesk', $this->Config->getActiveModules()))
@@ -48,7 +48,6 @@ class FolderURL extends Controller
 			
 		$this->arrKeywords = array_unique(array_merge($GLOBALS['URL_KEYWORDS'], trimsplit(',', $GLOBALS['TL_CONFIG']['urlKeywords'])));
 	}
-	
 	
 	
 	function getPageIdFromURL($urlfragments)
