@@ -19,7 +19,7 @@
  * Software Foundation website at <http://www.gnu.org/licenses/>.
  *
  * PHP version 5
- * @copyright  Andreas Schempp 2009-2010
+ * @copyright  Andreas Schempp 2008-2010
  * @author     Andreas Schempp <andreas@schempp.ch>
  * @license    http://opensource.org/licenses/lgpl-3.0.html
  * @version    $Id$
@@ -30,6 +30,7 @@ class FolderURL extends Controller
 {
 
 	protected $arrKeywords;
+	
 	
 	public function __construct()
 	{
@@ -44,14 +45,19 @@ class FolderURL extends Controller
 		// Module Forum/Helpdesk
 		if (in_array('helpdesk', $this->Config->getActiveModules()))
 		{
-			$GLOBALS['URL_KEYWORDS'] = array_merge($GLOBALS['URL_KEYWORDS'], array('category', 'topic', 'message', 'search', 'unread', 'markread'));
+			$GLOBALS['URL_KEYWORDS'][] = 'category';
+			$GLOBALS['URL_KEYWORDS'][] = 'topic';
+			$GLOBALS['URL_KEYWORDS'][] = 'message';
+			$GLOBALS['URL_KEYWORDS'][] = 'search';
+			$GLOBALS['URL_KEYWORDS'][] = 'unread';
+			$GLOBALS['URL_KEYWORDS'][] = 'markread';
 		}
 			
 		$this->arrKeywords = array_unique(array_merge($GLOBALS['URL_KEYWORDS'], trimsplit(',', $GLOBALS['TL_CONFIG']['urlKeywords'])));
 	}
 	
 	
-	function getPageIdFromURL($urlfragments)
+	public function getPageIdFromURL($urlfragments)
 	{
 		if (is_string($urlfragments))
 			return $urlfragments;
@@ -71,7 +77,7 @@ class FolderURL extends Controller
 	}
 	
 	
-	function generateFolderAlias($varValue, DataContainer $dc)
+	public function generateFolderAlias($varValue, DataContainer $dc)
 	{
 		if (!strlen($varValue) && ($GLOBALS['TL_CONFIG']['folderAlias'] || (strlen($GLOBALS['TL_CONFIG']['languageAlias']) && $GLOBALS['TL_CONFIG']['languageAlias'] != 'none')))
 		{
@@ -118,6 +124,16 @@ class FolderURL extends Controller
 		}
 
 		return $strAlias;
+	}
+	
+	
+	public function generateArticle(DataContainer $dc)
+	{
+		$arrAlias = explode('/', $dc->activeRecord->alias);
+		$dc->activeRecord->alias = array_pop($arrAlias);
+		
+		$objPage = new tl_page();
+		$objPage->generateArticle($dc);
 	}
 }
 
