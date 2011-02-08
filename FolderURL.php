@@ -29,6 +29,10 @@
 class FolderURL extends Controller
 {
 
+	/**
+	 * contain all url keywords
+	 * @var array
+	 */
 	protected $arrKeywords;
 	
 	
@@ -79,29 +83,30 @@ class FolderURL extends Controller
 	
 	public function generateFolderAlias($varValue, DataContainer $dc)
 	{
-		// check if the new folderurl contains some URL KEYWORDS
-		foreach ($GLOBALS['URL_KEYWORDS'] as $v)
-		{
-			if (preg_match('#' . $v . '[.,/]#', $varValue))
-			{
-				throw new Exception(sprintf($GLOBALS['TL_LANG']['ERR']['folderurl_forbidden_keywords'], (string) implode(', ', $GLOBALS['URL_KEYWORDS'])));
-			}
-		}
-
 		if (!strlen($varValue) && ($GLOBALS['TL_CONFIG']['folderAlias'] || (strlen($GLOBALS['TL_CONFIG']['languageAlias']) && $GLOBALS['TL_CONFIG']['languageAlias'] != 'none')))
 		{
 			$this->import('Database');
-			$objPage = $this->Database->prepare("SELECT pid,title,language FROM tl_page WHERE id=?")->execute($dc->id);
+			$objPage = $this->Database->prepare('SELECT * FROM tl_page WHERE id=?')->execute($dc->id);
 			
 			$strAlias = standardize($objPage->title);
 		
+			// if the auto generation is active, get the alias from the parent site
 			if ($GLOBALS['TL_CONFIG']['folderAlias'] && $objPage->numRows && $objPage->pid > 0)
 			{
-				$objParent = $this->Database->prepare("SELECT pid, alias, language FROM tl_page WHERE id=?")->execute($objPage->pid);
+				$objParent = $this->Database->prepare('SELECT * FROM tl_page WHERE id=?')
+											->execute($objPage->pid);
 				
-				if ($objParent->numRows && $objParent->pid > 0 && strlen($objParent->alias) && in_array($objParent->alias, $this->arrKeywords) === false)
+				if ($objParent->numRows && $objParent->pid > 0 && strlen($objParent->alias))
 				{
-					$strAlias = ($GLOBALS['TL_CONFIG']['languageAlias'] == 'right' && substr($objParent->alias, -3) == ('.'.$objParent->language) ? substr($objParent->alias, 0, -3) : $objParent->alias) . (substr($objParent->alias, -1) == '/' ? '' : '/') . $strAlias;
+					// check if the parent alias contains url keywords
+					if ($this->checkAlias($objParent->alias))
+					{
+						throw new Exception(sprintf($GLOBALS['TL_LANG']['ERR']['folderurl_forbidden_keywords_in_parent'], $objParent->alias));
+					}
+					else
+					{
+						$strAlias = ($GLOBALS['TL_CONFIG']['languageAlias'] == 'right' && substr($objParent->alias, -3) == ('.'.$objParent->language) ? substr($objParent->alias, 0, -3) : $objParent->alias) . (substr($objParent->alias, -1) == '/' ? '' : '/') . $strAlias;
+					}
 				}
 			}
 			
@@ -119,7 +124,14 @@ class FolderURL extends Controller
 		}
 		else
 		{
-			$strAlias = $varValue;
+			if ($this->checkAlias($varValue))
+			{
+				throw new Exception(sprintf($GLOBALS['TL_LANG']['ERR']['folderurl_forbidden_keywords'], $varValue));
+			}
+			else
+			{
+				$strAlias = $varValue;
+			}
 		}
 		
 		try
@@ -143,6 +155,24 @@ class FolderURL extends Controller
 		
 		$objPage = new tl_page();
 		$objPage->generateArticle($dc);
+	}
+	
+	/**
+	 * Check an alias for url keywords
+	 * 
+	 * @param string $strAlias
+	 * @return bool
+	 */
+	protected function checkAlias($strAlias)
+	{
+		foreach ($this->arrKeywords as $v)
+		{
+			if (preg_match('#/' . $v . '/|/' . $v . '$#', $strAlias))
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 }
 

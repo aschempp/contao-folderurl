@@ -28,4 +28,5 @@
 /**
  * Error messages
  */
-$GLOBALS['TL_LANG']['ERR']['folderurl_forbidden_keywords'] = 'The site alias cannot contain url keywords. The following words are forbidden: %s';
+$GLOBALS['TL_LANG']['ERR']['folderurl_forbidden_keywords']				= 'The site alias cannot contain url keywords. Matched keyword: %s';
+$GLOBALS['TL_LANG']['ERR']['folderurl_forbidden_keywords_in_parent']	= 'Alias generation failed because the parent site contain an url keyword. Please fix this problem and create the folderurl again. Matched keyword: %s';
