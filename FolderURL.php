@@ -79,6 +79,15 @@ class FolderURL extends Controller
 	
 	public function generateFolderAlias($varValue, DataContainer $dc)
 	{
+		// check if the new folderurl contains some URL KEYWORDS
+		foreach ($GLOBALS['URL_KEYWORDS'] as $v)
+		{
+			if (preg_match('#' . $v . '[.,/]#', $varValue))
+			{
+				throw new Exception(sprintf($GLOBALS['TL_LANG']['ERR']['folderurl_forbidden_keywords'], (string) implode(', ', $GLOBALS['URL_KEYWORDS'])));
+			}
+		}
+
 		if (!strlen($varValue) && ($GLOBALS['TL_CONFIG']['folderAlias'] || (strlen($GLOBALS['TL_CONFIG']['languageAlias']) && $GLOBALS['TL_CONFIG']['languageAlias'] != 'none')))
 		{
 			$this->import('Database');
