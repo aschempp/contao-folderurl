@@ -21,6 +21,7 @@
  * PHP version 5
  * @copyright  Andreas Schempp 2008-2010
  * @author     Andreas Schempp <andreas@schempp.ch>
+ * @author     Leo Unglaub <leo@leo-unglaub.net>
  * @license    http://opensource.org/licenses/lgpl-3.0.html
  * @version    $Id$
  */
@@ -96,17 +97,9 @@ class FolderURL extends Controller
 				$objParent = $this->Database->prepare('SELECT * FROM tl_page WHERE id=?')
 											->execute($objPage->pid);
 				
-				if ($objParent->numRows && $objParent->pid > 0 && strlen($objParent->alias))
+				if ($objParent->numRows && $objParent->type != 'root' && $objParent->alias != '')
 				{
-					// check if the parent alias contains url keywords
-					if ($this->checkAlias($objParent->alias))
-					{
-						throw new Exception(sprintf($GLOBALS['TL_LANG']['ERR']['folderurl_forbidden_keywords_in_parent'], $objParent->alias));
-					}
-					else
-					{
-						$strAlias = ($GLOBALS['TL_CONFIG']['languageAlias'] == 'right' && substr($objParent->alias, -3) == ('.'.$objParent->language) ? substr($objParent->alias, 0, -3) : $objParent->alias) . (substr($objParent->alias, -1) == '/' ? '' : '/') . $strAlias;
-					}
+					$strAlias = ($GLOBALS['TL_CONFIG']['languageAlias'] == 'right' && substr($objParent->alias, -3) == ('.'.$objParent->language) ? substr($objParent->alias, 0, -3) : $objParent->alias) . (substr($objParent->alias, -1) == '/' ? '' : '/') . $strAlias;
 				}
 			}
 			
@@ -121,12 +114,17 @@ class FolderURL extends Controller
 				
 				$strAlias = (substr($strAlias, 0, 3) == ($objRootPage->language.'/') ? '' : (($objRootPage->numRows && strlen($objRootPage->language) ? $objRootPage->language : $objPage->language) . '/')) . $strAlias;
 			}
+			
+			if (($strError = $this->validateAlias($strAlias)) !== true)
+			{
+				$strAlias = $strAlias .= '.' . $dc->id;
+			}
 		}
 		else
 		{
-			if ($this->checkAlias($varValue))
+			if (($strError = $this->validateAlias($varValue)) !== true)
 			{
-				throw new Exception(sprintf($GLOBALS['TL_LANG']['ERR']['folderurl_forbidden_keywords'], $varValue));
+				throw new Exception(sprintf($GLOBALS['TL_LANG']['ERR']['folderurl_forbidden_keyword'], $strError, implode(', ', $GLOBALS['URL_KEYWORDS'])));
 			}
 			else
 			{
@@ -163,16 +161,17 @@ class FolderURL extends Controller
 	 * @param string $strAlias
 	 * @return bool
 	 */
-	protected function checkAlias($strAlias)
+	protected function validateAlias($strAlias)
 	{
 		foreach ($this->arrKeywords as $v)
 		{
 			if (preg_match('#/' . $v . '/|/' . $v . '$#', $strAlias))
 			{
-				return true;
+				return $v;
 			}
 		}
-		return false;
+		
+		return true;
 	}
 }
 

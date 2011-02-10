@@ -28,5 +28,5 @@
 /**
  * Error messages
  */
-$GLOBALS['TL_LANG']['ERR']['folderurl_forbidden_keywords']				= 'Die Verwendung von "URL Keywords" ist im Seitenalias nicht gestattet. Verwendeted "URL Keyword": %s';
-$GLOBALS['TL_LANG']['ERR']['folderurl_forbidden_keywords_in_parent']	= 'Der Alias konnte nicht generiert werden, da in einem Eltern-Alias ein "URL Keyword" verwendet wird. Bitte beheben Sie dieses Problem und erstellen Sie diesen Alias neu. Folgendes "URL Keyword" wurde verwendet: %s';
+$GLOBALS['TL_LANG']['ERR']['folderurl_forbidden_keyword'] = 'Das Wort "%s" kann nicht im Alias verwendet werden weil eine Erweiterung es verwendet. Gesperrte Schlüsselwörter: %s';
+
