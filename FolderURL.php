@@ -148,6 +148,12 @@ class FolderURL extends Controller
 	
 	public function generateArticle(DataContainer $dc)
 	{
+		// Return if there is no active record (override all)
+		if (!$dc->activeRecord)
+		{
+			return;
+		}
+		
 		$arrAlias = explode('/', $dc->activeRecord->alias);
 		$dc->activeRecord->alias = array_pop($arrAlias);
 		
