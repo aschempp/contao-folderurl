@@ -120,19 +120,25 @@ class tl_page_folderurl extends tl_page
 		// Generate an alias if there is none
 		if ($varValue == '')
 		{
+			$objPage = $this->getPageDetails($dc->id);
+			
 			$autoAlias = true;
-			$varValue = standardize($dc->activeRecord->title);
+			$varValue = standardize($objPage->title);
 		}
 
 		if (strpos($varValue, '/') === false)
 		{
-			$objPage = $this->getPageDetails($dc->id);
+			if (!is_object($objPage))
+			{
+				$objPage = $this->getPageDetails($dc->id);
+			}
+			
 			$objRoot = $this->Database->execute("SELECT * FROM tl_page WHERE id=".(int)$objPage->rootId);
-	
+
 			if ($objRoot->folderAlias)
 			{
-				$objParent = $this->Database->execute("SELECT * FROM tl_page WHERE id=".(int)$objPage->pid);
-	
+				$objParent = $this->Database->executeUncached("SELECT * FROM tl_page WHERE id=".(int)$objPage->pid);
+
 				if ($objParent->type != 'root')
 				{
 					$folderAlias = true;
