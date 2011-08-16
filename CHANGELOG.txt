@@ -1,0 +1,12 @@
+=========
+folderurl
+=========
+
+Version 2.0.0 rc1 (2011-08-16)
+---------------------------------
+- Added: Language alias is now configurable per root page and dynamically generated
+- Added: Folder alias is now configurable per root page and invisibly added to the alias field
+- Added: DCA regular expression to validate for valid folderurl alias
+- Removed built-in support for extension "helpdesk"
+- Removed build-in support for extension "photoalbums"
+- Fixed english language files

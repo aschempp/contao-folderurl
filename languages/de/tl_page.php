@@ -29,5 +29,14 @@
 /**
  * Fields
  */
-$GLOBALS['TL_LANG']['tl_settings']['urlKeywords'] = array('Słowa kluczowe URL', 'Wprowdź, rozdzielone przecinkiem, słowa kluczowe, które mają być traktowane jako parametry.');
+$GLOBALS['TL_LANG']['tl_page']['folderAlias']		= array('Ordner-Alias erstellen', 'Klicken Sie hier wenn Seitenaliase automatisch mit übergeordneten Seiten generiert werden sollen (Ordner-ähnlich).');
+$GLOBALS['TL_LANG']['tl_page']['languageAlias']		= array('Sprache dem Alias anhängen', 'Wählen Sie ob die Sprache dem Alias angehängt werden soll.');
+
+
+/**
+ * References
+ */
+$GLOBALS['TL_LANG']['tl_page']['languageAlias']['none']		= 'Nicht anhängen';
+$GLOBALS['TL_LANG']['tl_page']['languageAlias']['left']		= 'Links anhängen (de/alias)';
+$GLOBALS['TL_LANG']['tl_page']['languageAlias']['right']	= 'Recht anhängen (alias.de)';
 

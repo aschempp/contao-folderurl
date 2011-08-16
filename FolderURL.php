@@ -19,7 +19,7 @@
  * Software Foundation website at <http://www.gnu.org/licenses/>.
  *
  * PHP version 5
- * @copyright  Andreas Schempp 2008-2010
+ * @copyright  Andreas Schempp 2008-2011
  * @author     Andreas Schempp <andreas@schempp.ch>
  * @author     Leo Unglaub <leo@leo-unglaub.net>
  * @license    http://opensource.org/licenses/lgpl-3.0.html
@@ -27,157 +27,164 @@
  */
 
 
-class FolderURL extends Controller
+class FolderURL extends Frontend
 {
 
 	/**
-	 * contain all url keywords
-	 * @var array
+	 * Parse url fragments to see if they are a parameter or part of the alias
+	 *
+	 * @param	array
+	 * @return	array
+	 * @link	http://www.contao.org/hooks.html?#getPageIdFromURL
 	 */
-	protected $arrKeywords;
-	
-	
-	public function __construct()
+	public function getPageIdFromUrl(array $arrFragments)
 	{
-		parent::__construct();
-		
-		// Module Photoalbums
-		if (in_array('photoalbums', $this->Config->getActiveModules()))
+		if (!count($arrFragments))
 		{
-			$GLOBALS['URL_KEYWORDS'][] = 'albums';
+			return $arrFragments;
 		}
 		
-		// Module Forum/Helpdesk
-		if (in_array('helpdesk', $this->Config->getActiveModules()))
+		$strAlias = array_shift($arrFragments);
+
+		while( ($strFragment = array_shift($arrFragments)) !== null )
 		{
-			$GLOBALS['URL_KEYWORDS'][] = 'category';
-			$GLOBALS['URL_KEYWORDS'][] = 'topic';
-			$GLOBALS['URL_KEYWORDS'][] = 'message';
-			$GLOBALS['URL_KEYWORDS'][] = 'search';
-			$GLOBALS['URL_KEYWORDS'][] = 'unread';
-			$GLOBALS['URL_KEYWORDS'][] = 'markread';
-		}
-			
-		$this->arrKeywords = array_unique(array_merge($GLOBALS['URL_KEYWORDS'], trimsplit(',', $GLOBALS['TL_CONFIG']['urlKeywords'])));
-	}
-	
-	
-	public function getPageIdFromURL($urlfragments)
-	{
-		if (is_string($urlfragments))
-			return $urlfragments;
-		
-		$alias = array_shift($urlfragments);
-		while( $fragment = array_shift($urlfragments) )
-		{
-			if (in_array($fragment, $this->arrKeywords))
+			// Found an url parameter, stop generating the alias
+			if (in_array($strFragment, $GLOBALS['URL_KEYWORDS']))
 			{
-				return array_merge(array($alias, $fragment), $urlfragments);
+				array_unshift($arrFragments, $strFragment);
+				break;
 			}
-			
-			$alias .= '/'.$fragment;
+
+			$strAlias .= '/'.$strFragment;
 		}
 
-		return array($alias);
-	}
-	
-	
-	public function generateFolderAlias($varValue, DataContainer $dc)
-	{
-		if (!strlen($varValue) && ($GLOBALS['TL_CONFIG']['folderAlias'] || (strlen($GLOBALS['TL_CONFIG']['languageAlias']) && $GLOBALS['TL_CONFIG']['languageAlias'] != 'none')))
+		$strPosition = 'none';
+		$strLanguage = '';
+
+		// if there is a slash at the third position, the first two could be a language identifier
+		if (strpos($strAlias, '/') === 2)
 		{
-			$this->import('Database');
-			$objPage = $this->Database->prepare('SELECT * FROM tl_page WHERE id=?')->execute($dc->id);
-			
-			$strAlias = standardize($objPage->title);
+			$strLanguage = substr($strAlias, 0, 2);
+			$strAlias = substr($strAlias, 3);
+			$strPosition = 'left';
+		}
 		
-			// if the auto generation is active, get the alias from the parent site
-			if ($GLOBALS['TL_CONFIG']['folderAlias'] && $objPage->numRows && $objPage->pid > 0)
+		// if the 3th-last character is a dot, the last 2 could be the language identifier
+		elseif (strrpos($strAlias, '.') === (strlen($strAlias)-3))
+		{
+			$strLanguage = substr($strAlias, -2);
+			$strAlias = substr($strAlias, 0, -3);
+			$strPosition = 'right';
+		}
+
+		if ($strLanguage != '')
+		{
+			$time = time();
+
+			// Get the current page object
+			$objPage = $this->Database->prepare("SELECT * FROM tl_page WHERE (id=? OR alias=?)" . (!BE_USER_LOGGED_IN ? " AND (start='' OR start<$time) AND (stop='' OR stop>$time) AND published=1" : ""))
+									  ->execute((is_numeric($strAlias) ? $strAlias : 0), $strAlias);
+	
+			// Check the URL of each page if there are multiple results
+			if ($objPage->numRows > 1)
 			{
-				$objParent = $this->Database->prepare('SELECT * FROM tl_page WHERE id=?')
-											->execute($objPage->pid);
-				
-				if ($objParent->numRows && $objParent->type != 'root' && $objParent->alias != '')
+				$objNewPage = null;
+				$strHost = $this->Environment->host;
+	
+				while ($objPage->next())
 				{
-					$strAlias = ($GLOBALS['TL_CONFIG']['languageAlias'] == 'right' && substr($objParent->alias, -3) == ('.'.$objParent->language) ? substr($objParent->alias, 0, -3) : $objParent->alias) . (substr($objParent->alias, -1) == '/' ? '' : '/') . $strAlias;
+					$objCurrentPage = $this->getPageDetails($objPage->id);
+					$objRootPage = $this->Database->execute("SELECT * FROM tl_page WHERE id=".(int)$objCurrentPage->rootId);
+
+					// Look for a root page whose domain name matches the host name
+					if (($objCurrentPage->domain == $strHost || $objCurrentPage->domain == 'www.' . $strHost) && $objRootPage->language == $strLanguage && $objRootPage->languageAlias == $strPosition)
+					{
+						$strAlias = $objCurrentPage->id;
+						break;
+					}
+
+					// Fall back to a root page without domain name
+					if ($objCurrentPage->domain == '' && $objRootPage->language == $strLanguage && $objRootPage->languageAlias == $strPosition)
+					{
+						$strAlias = $objCurrentPage->id;
+					}
 				}
 			}
-			
-			if ($GLOBALS['TL_CONFIG']['languageAlias'] == 'right' && $objPage->numRows && strlen($objPage->language))
-			{
-				$strAlias .= '.'.$objPage->language;
-			}
-			elseif ($GLOBALS['TL_CONFIG']['languageAlias'] == 'left' && $objPage->numRows)
-			{
-				$objPage = $this->getPageDetails($dc->id);
-				$objRootPage = $this->Database->prepare("SELECT * FROM tl_page WHERE id=?")->execute($objPage->rootId);
-				
-				$strAlias = (substr($strAlias, 0, 3) == ($objRootPage->language.'/') ? '' : (($objRootPage->numRows && strlen($objRootPage->language) ? $objRootPage->language : $objPage->language) . '/')) . $strAlias;
-			}
-			
-			if (($strError = $this->validateAlias($strAlias)) !== true)
-			{
-				$strAlias = $strAlias .= '.' . $dc->id;
-			}
-		}
-		else
-		{
-			if (($strError = $this->validateAlias($varValue)) !== true)
-			{
-				throw new Exception(sprintf($GLOBALS['TL_LANG']['ERR']['folderurl_forbidden_keyword'], $strError, implode(', ', $GLOBALS['URL_KEYWORDS'])));
-			}
-			else
-			{
-				$strAlias = $varValue;
-			}
-		}
-		
-		try
-		{
-			$this->import('tl_page');
-			$strAlias = $this->tl_page->generateAlias($strAlias, $dc);
-		}
-		catch (Exception $e)
-		{
-			$strAlias = $strAlias .= '.' . $dc->id;
 		}
 
-		return $strAlias;
+		array_unshift($arrFragments, $strAlias);
+
+		return $arrFragments;
 	}
-	
-	
-	public function generateArticle(DataContainer $dc)
-	{
-		// Return if there is no active record (override all)
-		if (!$dc->activeRecord)
-		{
-			return;
-		}
-		
-		$arrAlias = explode('/', $dc->activeRecord->alias);
-		$dc->activeRecord->alias = array_pop($arrAlias);
-		
-		$objPage = new tl_page();
-		$objPage->generateArticle($dc);
-	}
-	
+
+
 	/**
-	 * Check an alias for url keywords
-	 * 
-	 * @param string $strAlias
-	 * @return bool
+	 * Append language identifier to the frontend URL if enabled in the root page settings
+	 *
+	 * @param	array
+	 * @param	string
+	 * @param	string
+	 * @return	string
+	 * @link	http://www.contao.org/hooks.html?#generateFrontendUrl
 	 */
-	protected function validateAlias($strAlias)
+	public function appendLanguageIdentifier($arrRow, $strParams, $strUrl)
 	{
-		foreach ($this->arrKeywords as $v)
+		// No need to add the language if we don't use url aliases
+		if ($GLOBALS['TL_CONFIG']['disableAlias'])
 		{
-			if (preg_match('#/' . $v . '/|/' . $v . '$#', $strAlias))
-			{
-				return $v;
-			}
+			return $strUrl;
 		}
 		
-		return true;
+		$intRootId = $arrRow['rootId'];
+		if (!$intRootId)
+		{
+			$objPage = $this->getPageDetails($arrRow['id']);
+			$intRootId = $objPage->rootId;
+		}
+		
+		$objRoot = $this->Database->execute("SELECT * FROM tl_page WHERE id=".(int)$intRootId);
+		
+		if ($objRoot->languageAlias == 'left')
+		{
+			$strUrl = ($GLOBALS['TL_CONFIG']['rewriteURL'] ? '' : 'index.php/') . $objRoot->language . '/' . (strlen($arrRow['alias']) ? $arrRow['alias'] : $arrRow['id']) . $strParams . $GLOBALS['TL_CONFIG']['urlSuffix'];
+		}
+		elseif ($objRoot->languageAlias == 'right')
+		{
+			$strUrl = ($GLOBALS['TL_CONFIG']['rewriteURL'] ? '' : 'index.php/') . (strlen($arrRow['alias']) ? $arrRow['alias'] : $arrRow['id']) . '.' . $objRoot->language . $strParams . $GLOBALS['TL_CONFIG']['urlSuffix'];
+		}
+		
+		return $strUrl;
+	}
+
+
+	/**
+	 * Validate a folderurl alias.
+	 * The validation is identical to the regular "alnum" except that it also allows for slashes (/).
+	 *
+	 * @param	string
+	 * @param	mixed
+	 * @param	Widget
+	 * @return	bool
+	 */
+	public function validateRegexp($strRegexp, $varValue, Widget $objWidget)
+	{
+		if ($strRegexp == 'folderurl')
+		{
+			if (!preg_match('/^[\pN\pL \.\/_-]*$/u', $varValue))
+			{
+				$objWidget->addError(sprintf($GLOBALS['TL_LANG']['ERR']['alnum'], $objWidget->label));
+			}
+
+			if (preg_match('#/' . implode('/|/', $GLOBALS['URL_KEYWORDS']) . '/|/' . implode('$|/', $GLOBALS['URL_KEYWORDS']) . '$#', $varValue, $match))
+			{
+				$strError = str_replace('/', '', $match[0]);
+				$objWidget->addError(sprintf($GLOBALS['TL_LANG']['ERR']['folderurl'], $strError, implode(', ', $GLOBALS['URL_KEYWORDS'])));
+			}
+
+			return true;
+		}
+
+		return false;
 	}
 }
 

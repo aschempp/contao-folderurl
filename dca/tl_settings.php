@@ -19,7 +19,7 @@
  * Software Foundation website at <http://www.gnu.org/licenses/>.
  *
  * PHP version 5
- * @copyright  Andreas Schempp 2008-2010
+ * @copyright  Andreas Schempp 2008-2011
  * @author     Andreas Schempp <andreas@schempp.ch>
  * @license    http://opensource.org/licenses/lgpl-3.0.html
  * @version    $Id$
@@ -29,7 +29,6 @@
 /**
  * Palettes
  */
-$GLOBALS['TL_DCA']['tl_settings']['palettes']['default'] = preg_replace('@([,|;]pNewLine)([,|;])@', '$1,folderAlias,languageAlias$2', $GLOBALS['TL_DCA']['tl_settings']['palettes']['default']);
 $GLOBALS['TL_DCA']['tl_settings']['palettes']['default'] = preg_replace('@([,|;]allowedTags)([,|;])@', '$1,urlKeywords$2', $GLOBALS['TL_DCA']['tl_settings']['palettes']['default']);
 
 
@@ -41,22 +40,5 @@ $GLOBALS['TL_DCA']['tl_settings']['fields']['urlKeywords'] = array
 	'label'			=> &$GLOBALS['TL_LANG']['tl_settings']['urlKeywords'],
 	'inputType'		=> 'text',
 	'eval'			=> array('tl_class'=>'long'),
-);
-
-$GLOBALS['TL_DCA']['tl_settings']['fields']['folderAlias'] = array
-(
-	'label'			=> &$GLOBALS['TL_LANG']['tl_settings']['folderAlias'],
-	'inputType'		=> 'checkbox',
-	'eval'			=> array('tl_class'=>'w50'),
-);
-
-$GLOBALS['TL_DCA']['tl_settings']['fields']['languageAlias'] = array
-(
-	'label'			=> &$GLOBALS['TL_LANG']['tl_settings']['languageAlias'],
-	'inputType'		=> 'radio',
-	'default'		=> 'none',
-	'options'		=> array('none', 'left', 'right'),
-	'reference'		=> &$GLOBALS['TL_LANG']['tl_settings']['languageAlias_ref'],
-	'eval'			=> array('tl_class'=>'w50'),
 );
 

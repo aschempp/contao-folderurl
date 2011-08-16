@@ -19,7 +19,7 @@
  * Software Foundation website at <http://www.gnu.org/licenses/>.
  *
  * PHP version 5
- * @copyright  Andreas Schempp 2008-2010
+ * @copyright  Andreas Schempp 2008-2011
  * @author     Andreas Schempp <andreas@schempp.ch>
  * @license    http://opensource.org/licenses/lgpl-3.0.html
  * @version    $Id$
@@ -29,7 +29,9 @@
 /**
  * Hooks
  */
+$GLOBALS['TL_HOOKS']['addCustomRegexp'][] = array('FolderURL', 'validateRegexp');
 $GLOBALS['TL_HOOKS']['getPageIdFromUrl'][] = array('FolderURL', 'getPageIdFromUrl');
+$GLOBALS['TL_HOOKS']['generateFrontendUrl'][] = array('FolderURL', 'appendLanguageIdentifier');
 
 
 /**
@@ -39,4 +41,5 @@ $GLOBALS['URL_KEYWORDS'][] = 'items';
 $GLOBALS['URL_KEYWORDS'][] = 'articles';
 $GLOBALS['URL_KEYWORDS'][] = 'events';
 $GLOBALS['URL_KEYWORDS'][] = 'page';
+$GLOBALS['URL_KEYWORDS'] = array_unique(array_merge($GLOBALS['URL_KEYWORDS'], trimsplit(',', $GLOBALS['TL_CONFIG']['urlKeywords'])));
 

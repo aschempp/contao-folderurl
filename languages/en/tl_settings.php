@@ -19,7 +19,7 @@
  * Software Foundation website at <http://www.gnu.org/licenses/>.
  *
  * PHP version 5
- * @copyright  Andreas Schempp 2008-2010
+ * @copyright  Andreas Schempp 2008-2011
  * @author     Andreas Schempp <andreas@schempp.ch>
  * @license    http://opensource.org/licenses/lgpl-3.0.html
  * @version    $Id$
@@ -29,15 +29,5 @@
 /**
  * Fields
  */
-$GLOBALS['TL_LANG']['tl_settings']['urlKeywords']		= array('URL Keywords', 'Please enter additional (comma separated) keywords the FolderURL Extension should detect as variables.');
-$GLOBALS['TL_LANG']['tl_settings']['folderAlias']		= array('Generate folder alias', 'Check here if you want to generate page alias including parent page alias (folder-like).');
-$GLOBALS['TL_LANG']['tl_settings']['languageAlias']		= array('Append language to alias', 'Select if you want to append the language to the page alias (eg. alias.en).');
-
-
-/**
- * References
- */
-$GLOBALS['TL_LANG']['tl_settings']['languageAlias_ref']['none']		= 'Do not append';
-$GLOBALS['TL_LANG']['tl_settings']['languageAlias_ref']['left']		= 'Append left (z.B. en/alias)';
-$GLOBALS['TL_LANG']['tl_settings']['languageAlias_ref']['right']	= 'Append right (z.B. alias.en)';
+$GLOBALS['TL_LANG']['tl_settings']['urlKeywords'] = array('URL Keywords', 'Please enter additional (comma separated) keywords the FolderURL Extension should detect as variables.');
 

@@ -19,7 +19,7 @@
  * Software Foundation website at <http://www.gnu.org/licenses/>.
  *
  * PHP version 5
- * @copyright  Andreas Schempp 2008-2010
+ * @copyright  Andreas Schempp 2008-2011
  * @author     Andreas Schempp <andreas@schempp.ch>
  * @license    http://opensource.org/licenses/lgpl-3.0.html
  * @version    $Id$
@@ -27,21 +27,200 @@
  
 
 /**
- * Config
+ * Replace core callbacks
  */
 foreach( $GLOBALS['TL_DCA']['tl_page']['config']['onsubmit_callback'] as $i => $arrCallback )
 {
 	if ($arrCallback[1] == 'generateArticle')
 	{
-		$GLOBALS['TL_DCA']['tl_page']['config']['onsubmit_callback'][$i][0] = 'FolderURL';
+		$GLOBALS['TL_DCA']['tl_page']['config']['onsubmit_callback'][$i][0] = 'tl_page_folderurl';
+		break;
+	}
+}
+
+foreach( $GLOBALS['TL_DCA']['tl_page']['fields']['alias']['save_callback'] as $i => $arrCallback )
+{
+	if ($arrCallback[1] == 'generateAlias')
+	{
+		$GLOBALS['TL_DCA']['tl_page']['fields']['alias']['save_callback'][$i][0] = 'tl_page_folderurl';
+		break;
 	}
 }
 
 
 /**
+ * Palettes
+ */
+$GLOBALS['TL_DCA']['tl_page']['palettes']['root'] .= ';{folderurl_legend},languageAlias,folderAlias';
+
+
+/**
  * Fields
  */
-$GLOBALS['TL_DCA']['tl_page']['fields']['alias']['eval']['rgxp'] = 'url';
-unset($GLOBALS['TL_DCA']['tl_page']['fields']['alias']['save_callback'][0]);
-$GLOBALS['TL_DCA']['tl_page']['fields']['alias']['save_callback'][] = array('FolderURL', 'generateFolderAlias');
+$GLOBALS['TL_DCA']['tl_page']['fields']['alias']['eval']['rgxp'] = 'folderurl';
+$GLOBALS['TL_DCA']['tl_page']['fields']['alias']['load_callback'][] = array('tl_page_folderurl', 'hideParentAlias');
+
+$GLOBALS['TL_DCA']['tl_page']['fields']['languageAlias'] = array
+(
+	'label'			=> &$GLOBALS['TL_LANG']['tl_page']['languageAlias'],
+	'inputType'		=> 'radio',
+	'default'		=> 'none',
+	'options'		=> array('none', 'left', 'right'),
+	'reference'		=> &$GLOBALS['TL_LANG']['tl_page']['languageAlias'],
+	'eval'			=> array('tl_class'=>'w50" style="height:auto'),
+);
+
+$GLOBALS['TL_DCA']['tl_page']['fields']['folderAlias'] = array
+(
+	'label'			=> &$GLOBALS['TL_LANG']['tl_page']['folderAlias'],
+	'inputType'		=> 'checkbox',
+	'eval'			=> array('tl_class'=>'w50 m12'),
+);
+
+
+
+class tl_page_folderurl extends tl_page
+{
+	
+	/**
+	 * Only use the last portion of the page alias for the article alias
+	 *
+	 * @param	DataContainer
+	 * @return	void
+	 * @link	http://www.contao.org/callbacks.html#onsubmit_callback
+	 */
+	public function generateArticle(DataContainer $dc)
+	{
+		// Return if there is no active record (override all)
+		if (!$dc->activeRecord)
+		{
+			return;
+		}
+		
+		$arrAlias = explode('/', $dc->activeRecord->alias);
+		$dc->activeRecord->alias = array_pop($arrAlias);
+		
+		parent::generateArticle($dc);
+	}
+
+
+	/**
+	 * Replaces the default contao core function to auto-generate a page alias if it has not been set yet.
+	 *
+	 * @param	mixed
+	 * @param	DataContainer
+	 * @return	mixed
+	 * @link	http://www.contao.org/callbacks.html#save_callback
+	 */
+	public function generateAlias($varValue, DataContainer $dc)
+	{
+		$folderAlias = false;
+		$autoAlias = false;
+
+		// Generate an alias if there is none
+		if ($varValue == '')
+		{
+			$autoAlias = true;
+			$varValue = standardize($dc->activeRecord->title);
+		}
+
+		if (strpos($varValue, '/') === false)
+		{
+			$objPage = $this->getPageDetails($dc->id);
+			$objRoot = $this->Database->execute("SELECT * FROM tl_page WHERE id=".(int)$objPage->rootId);
+	
+			if ($objRoot->folderAlias)
+			{
+				$objParent = $this->Database->execute("SELECT * FROM tl_page WHERE id=".(int)$objPage->pid);
+	
+				if ($objParent->type != 'root')
+				{
+					$folderAlias = true;
+					$varValue = $objParent->alias . '/' . $varValue;
+				}
+			}
+		}
+
+		$objAlias = $this->Database->prepare("SELECT id FROM tl_page WHERE id=? OR alias=?")
+								   ->execute($dc->id, $varValue);
+
+		// Check whether the page alias exists
+		if ($objAlias->numRows > 1)
+		{
+			$arrDomains = array();
+
+			while ($objAlias->next())
+			{
+				$_pid = $objAlias->id;
+				$_type = '';
+
+				do
+				{
+					$objParentPage = $this->Database->prepare("SELECT * FROM tl_page WHERE id=?")
+													->limit(1)
+													->execute($_pid);
+
+					if ($objParentPage->numRows < 1)
+					{
+						break;
+					}
+
+					$_pid = $objParentPage->pid;
+					$_type = $objParentPage->type;
+				}
+				while ($_pid > 0 && $_type != 'root');
+
+				if ($objParentPage->numRows && ($objParentPage->type == 'root' || $objParentPage->pid > 0))
+				{
+					$arrDomains[] = ($objParentPage->languageAlias == 'left' || $objParentPage->languageAlias == 'right') ? ($objParentPage->dns.'/'.$objParentPage->language) : $objParentPage->dns;
+				}
+				else
+				{
+					$arrDomains[] = '';
+				}
+			}
+
+			$arrUnique = array_unique($arrDomains);
+
+			if (count($arrDomains) != count($arrUnique))
+			{
+				if (!$autoAlias)
+				{
+					throw new Exception(sprintf($GLOBALS['TL_LANG']['ERR']['aliasExists'.($folderAlias ? 'Folder' : '')], $varValue));
+				}
+
+				$varValue .= '-' . $dc->id;
+			}
+		}
+
+		return $varValue;
+	}
+
+
+	/**
+	 * Hide the parent alias from the user when editing the alias field
+	 *
+	 * @param	string
+	 * @param	DataContainer
+	 * @return	string
+	 * @link	http://www.contao.org/callbacks.html#load_callback
+	 */
+	public function hideParentAlias($varValue, DataContainer $dc)
+	{
+		$objPage = $this->getPageDetails($dc->id);
+		$objRoot = $this->Database->execute("SELECT * FROM tl_page WHERE id=".(int)$objPage->rootId);
+
+		if ($objRoot->folderAlias)
+		{
+			$objParent = $this->Database->execute("SELECT * FROM tl_page WHERE id=".(int)$objPage->pid);
+
+			if ($objParent->type != 'root')
+			{
+				$varValue = str_replace($objParent->alias.'/', '', $varValue);
+			}
+		}
+
+		return $varValue;
+	}
+}
 

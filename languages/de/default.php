@@ -19,14 +19,16 @@
  * Software Foundation website at <http://www.gnu.org/licenses/>.
  *
  * PHP version 5
- * @copyright  Andreas Schempp 2008-2010
+ * @copyright  Andreas Schempp 2008-2011
+ * @author     Andreas Schempp <andreas@schempp.ch>
  * @author     Leo Unglaub <leo@leo-unglaub.net>
  * @license    http://opensource.org/licenses/lgpl-3.0.html
- * @version    $Id: modules.php 187 2011-01-11 12:58:12Z aschempp $
+ * @version    $Id: $
  */
 
 /**
  * Error messages
  */
-$GLOBALS['TL_LANG']['ERR']['folderurl_forbidden_keyword'] = 'Das Wort "%s" kann nicht im Alias verwendet werden weil eine Erweiterung es verwendet. Gesperrte Schlüsselwörter: %s';
+$GLOBALS['TL_LANG']['ERR']['folderurl'] = 'Das Wort "%s" kann nicht im Alias verwendet werden, weil es von einer Erweiterung reserviert ist.<br>Gesperrte Schlüsselwörter: %s';
+$GLOBALS['TL_LANG']['ERR']['aliasExistsFolder'] = 'Der Alias "%s" existiert bereits! (Der übergeordnete Alias wurde automatisch hinzugefügt)';
 

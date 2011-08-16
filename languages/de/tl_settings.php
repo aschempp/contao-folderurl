@@ -19,7 +19,7 @@
  * Software Foundation website at <http://www.gnu.org/licenses/>.
  *
  * PHP version 5
- * @copyright  Andreas Schempp 2008-2010
+ * @copyright  Andreas Schempp 2008-2011
  * @author     Andreas Schempp <andreas@schempp.ch>
  * @license    http://opensource.org/licenses/lgpl-3.0.html
  * @version    $Id$
@@ -30,14 +30,4 @@
  * Fields
  */
 $GLOBALS['TL_LANG']['tl_settings']['urlKeywords']		= array('URL Schlüsselworte', 'Bitte geben Sie zusätzliche Schlüsselwörter (durch Komma getrennt) ein, welche von der Ordner-URL Erweiterung als Variablen erkannt werden sollen.');
-$GLOBALS['TL_LANG']['tl_settings']['folderAlias']		= array('Ordner-Alias erstellen', 'Klicken Sie hier wenn Seitenaliase automatisch mit übergeordneten Seiten generiert werden sollen (Ordner-ähnlich).');
-$GLOBALS['TL_LANG']['tl_settings']['languageAlias']		= array('Sprache dem Alias anhängen', 'Wählen Sie ob die Sprache dem Alias angehängt werden soll.');
-
-
-/**
- * References
- */
-$GLOBALS['TL_LANG']['tl_settings']['languageAlias_ref']['none']		= 'Nicht anhängen';
-$GLOBALS['TL_LANG']['tl_settings']['languageAlias_ref']['left']		= 'Links anhängen (z.B. de/alias)';
-$GLOBALS['TL_LANG']['tl_settings']['languageAlias_ref']['right']	= 'Recht anhängen (z.B. alias.de)';
 

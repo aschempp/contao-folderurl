@@ -19,14 +19,17 @@
  * Software Foundation website at <http://www.gnu.org/licenses/>.
  *
  * PHP version 5
- * @copyright  Andreas Schempp 2008-2010
+ * @copyright  Andreas Schempp 2008-2011
+ * @author     Andreas Schempp <andreas@schempp.ch>
  * @author     Leo Unglaub <leo@leo-unglaub.net>
  * @license    http://opensource.org/licenses/lgpl-3.0.html
- * @version    $Id: modules.php 187 2011-01-11 12:58:12Z aschempp $
+ * @version    $Id: $
  */
+
 
 /**
  * Error messages
  */
-$GLOBALS['TL_LANG']['ERR']['folderurl_forbidden_keyword'] = 'The keyword "%s" cannot be in your alias because an extension uses it. Disallowed keywords: %s';
+$GLOBALS['TL_LANG']['ERR']['folderurl'] = 'The keyword "%s" cannot be in your alias because an extension uses it.<br>Disallowed keywords: %s';
+$GLOBALS['TL_LANG']['ERR']['aliasExistsFolder'] = 'The alias "%s" already exists! (the parent alias was automatically added)';
 
