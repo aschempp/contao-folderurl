@@ -37,7 +37,7 @@ class FolderURL extends Frontend
 	 * @return	array
 	 * @link	http://www.contao.org/hooks.html?#getPageIdFromURL
 	 */
-	public function getPageIdFromUrl(array $arrFragments)
+	public function findAlias(array $arrFragments)
 	{
 		if (!count($arrFragments))
 		{
