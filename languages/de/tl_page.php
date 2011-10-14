@@ -31,6 +31,7 @@
  */
 $GLOBALS['TL_LANG']['tl_page']['folderAlias']		= array('Ordner-Alias erstellen', 'Klicken Sie hier wenn Seitenaliase automatisch mit übergeordneten Seiten generiert werden sollen (Ordner-ähnlich).');
 $GLOBALS['TL_LANG']['tl_page']['languageAlias']		= array('Sprache dem Alias anhängen', 'Wählen Sie ob die Sprache dem Alias angehängt werden soll.');
+$GLOBALS['TL_LANG']['tl_page']['subAlias']			= array('Leere Alias von Unterseiten aktualisieren', 'Generiert ein neues Alias für Unterseiten, falls deren Alias leer ist.');
 
 
 /**

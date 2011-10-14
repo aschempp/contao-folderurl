@@ -29,6 +29,8 @@
 /**
  * Replace core callbacks
  */
+array_insert($GLOBALS['TL_DCA']['tl_page']['config']['onsubmit_callback'], 0, array(array('tl_page_folderurl', 'verifyAliases')));
+
 foreach( $GLOBALS['TL_DCA']['tl_page']['config']['onsubmit_callback'] as $i => $arrCallback )
 {
 	if ($arrCallback[1] == 'generateArticle')
@@ -42,7 +44,7 @@ foreach( $GLOBALS['TL_DCA']['tl_page']['fields']['alias']['save_callback'] as $i
 {
 	if ($arrCallback[1] == 'generateAlias')
 	{
-		$GLOBALS['TL_DCA']['tl_page']['fields']['alias']['save_callback'][$i][0] = 'tl_page_folderurl';
+		$GLOBALS['TL_DCA']['tl_page']['fields']['alias']['save_callback'][$i] = array('tl_page_folderurl', 'generateFolderAlias');
 		break;
 	}
 }
@@ -51,7 +53,7 @@ foreach( $GLOBALS['TL_DCA']['tl_page']['fields']['alias']['save_callback'] as $i
 /**
  * Palettes
  */
-$GLOBALS['TL_DCA']['tl_page']['palettes']['root'] .= ';{folderurl_legend},languageAlias,folderAlias';
+$GLOBALS['TL_DCA']['tl_page']['palettes']['root'] .= ';{folderurl_legend},languageAlias,folderAlias,subAlias';
 
 
 /**
@@ -74,9 +76,15 @@ $GLOBALS['TL_DCA']['tl_page']['fields']['folderAlias'] = array
 (
 	'label'			=> &$GLOBALS['TL_LANG']['tl_page']['folderAlias'],
 	'inputType'		=> 'checkbox',
-	'eval'			=> array('tl_class'=>'w50 m12'),
+	'eval'			=> array('tl_class'=>'w50'),
 );
 
+$GLOBALS['TL_DCA']['tl_page']['fields']['subAlias'] = array
+(
+	'label'			=> &$GLOBALS['TL_LANG']['tl_page']['subAlias'],
+	'inputType'		=> 'checkbox',
+	'eval'			=> array('tl_class'=>'w50'),
+);
 
 
 class tl_page_folderurl extends tl_page
@@ -84,7 +92,6 @@ class tl_page_folderurl extends tl_page
 	
 	/**
 	 * Only use the last portion of the page alias for the article alias
-	 *
 	 * @param	DataContainer
 	 * @return	void
 	 * @link	http://www.contao.org/callbacks.html#onsubmit_callback
@@ -106,13 +113,12 @@ class tl_page_folderurl extends tl_page
 
 	/**
 	 * Replaces the default contao core function to auto-generate a page alias if it has not been set yet.
-	 *
 	 * @param	mixed
 	 * @param	DataContainer
 	 * @return	mixed
 	 * @link	http://www.contao.org/callbacks.html#save_callback
 	 */
-	public function generateAlias($varValue, DataContainer $dc)
+	public function generateFolderAlias($varValue, $dc)
 	{
 		$folderAlias = false;
 		$autoAlias = false;
@@ -205,13 +211,12 @@ class tl_page_folderurl extends tl_page
 
 	/**
 	 * Hide the parent alias from the user when editing the alias field
-	 *
 	 * @param	string
 	 * @param	DataContainer
 	 * @return	string
 	 * @link	http://www.contao.org/callbacks.html#load_callback
 	 */
-	public function hideParentAlias($varValue, DataContainer $dc)
+	public function hideParentAlias($varValue, $dc)
 	{
 		$objPage = $this->getPageDetails($dc->id);
 		$objRoot = $this->Database->execute("SELECT * FROM tl_page WHERE id=".(int)$objPage->rootId);
@@ -227,6 +232,37 @@ class tl_page_folderurl extends tl_page
 		}
 
 		return $varValue;
+	}
+	
+	
+	/**
+	 * Generate the page alias even if the alias field is hidden from the user
+	 * @param DataContainer
+	 * @return void
+	 * @link http://www.contao.org/callbacks.html#onsubmit_callback
+	 */
+	public function verifyAliases($dc)
+	{
+		if ($dc->activeRecord->alias == '')
+		{
+			$strAlias = $this->generateFolderAlias('', $dc);
+			$this->Database->prepare("UPDATE tl_page SET alias=? WHERE id=?")->execute($strAlias, $dc->id);
+		}
+		
+		$objPage = $this->getPageDetails($dc->id);
+		$objRoot = $this->Database->execute("SELECT * FROM tl_page WHERE id=".(int)$objPage->rootId);
+		
+		if ($objRoot->subAlias)
+		{
+			$arrChildren = $this->getChildRecords($dc->id, 'tl_page');
+			$objChildren = $this->Database->execute("SELECT * FROM tl_page WHERE id IN (" . implode(',', $arrChildren) . ") AND alias=''");
+			
+			while( $objChildren->next() )
+			{
+				$strAlias = $this->generateFolderAlias($objChildren->alias, (object)array('id'=>$objChildren->id, 'activeRecord'=>$objChildren));
+				$this->Database->prepare("UPDATE tl_page SET alias=? WHERE id=?")->execute($strAlias, $objChildren->id);
+			}
+		}
 	}
 }
 
