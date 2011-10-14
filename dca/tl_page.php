@@ -126,7 +126,7 @@ class tl_page_folderurl extends tl_page
 		// Generate an alias if there is none
 		if ($varValue == '')
 		{
-			$objPage = $this->getPageDetails($dc->id);
+			$objPage = $this->Database->executeUncached("SELECT * FROM tl_page WHERE id=".$dc->id);
 			
 			$autoAlias = true;
 			$varValue = standardize($objPage->title);
@@ -134,11 +134,7 @@ class tl_page_folderurl extends tl_page
 
 		if (strpos($varValue, '/') === false)
 		{
-			if (!is_object($objPage))
-			{
-				$objPage = $this->getPageDetails($dc->id);
-			}
-			
+			$objPage = $this->getPageDetails($dc->id);
 			$objRoot = $this->Database->execute("SELECT * FROM tl_page WHERE id=".(int)$objPage->rootId);
 
 			if ($objRoot->folderAlias)
@@ -243,6 +239,11 @@ class tl_page_folderurl extends tl_page
 	 */
 	public function verifyAliases($dc)
 	{
+		if (!$dc->activeRecord)
+		{
+			return;
+		}
+
 		if ($dc->activeRecord->alias == '')
 		{
 			$strAlias = $this->generateFolderAlias('', $dc);
@@ -254,13 +255,17 @@ class tl_page_folderurl extends tl_page
 		
 		if ($objRoot->subAlias)
 		{
-			$arrChildren = $this->getChildRecords($dc->id, 'tl_page');
-			$objChildren = $this->Database->execute("SELECT * FROM tl_page WHERE id IN (" . implode(',', $arrChildren) . ") AND alias=''");
+			$arrChildren = $this->getChildRecords($dc->id, 'tl_page', true);
 			
-			while( $objChildren->next() )
+			if (count($arrChildren))
 			{
-				$strAlias = $this->generateFolderAlias($objChildren->alias, (object)array('id'=>$objChildren->id, 'activeRecord'=>$objChildren));
-				$this->Database->prepare("UPDATE tl_page SET alias=? WHERE id=?")->execute($strAlias, $objChildren->id);
+				$objChildren = $this->Database->execute("SELECT * FROM tl_page WHERE id IN (" . implode(',', $arrChildren) . ") AND alias='' ORDER BY id=" . implode(' DESC, id=', $arrChildren) . " DESC");
+				
+				while( $objChildren->next() )
+				{
+					$strAlias = $this->generateFolderAlias('', (object)array('id'=>$objChildren->id, 'activeRecord'=>$objChildren));
+					$this->Database->prepare("UPDATE tl_page SET alias=? WHERE id=?")->execute($strAlias, $objChildren->id);
+				}
 			}
 		}
 	}
