@@ -53,7 +53,7 @@ foreach( $GLOBALS['TL_DCA']['tl_page']['fields']['alias']['save_callback'] as $i
 /**
  * Palettes
  */
-$GLOBALS['TL_DCA']['tl_page']['palettes']['root'] .= ';{folderurl_legend},languageAlias,folderAlias,subAlias';
+$GLOBALS['TL_DCA']['tl_page']['palettes']['root'] .= ';{folderurl_legend},folderAlias,subAlias';
 
 
 /**
@@ -61,16 +61,6 @@ $GLOBALS['TL_DCA']['tl_page']['palettes']['root'] .= ';{folderurl_legend},langua
  */
 $GLOBALS['TL_DCA']['tl_page']['fields']['alias']['eval']['rgxp'] = 'folderurl';
 $GLOBALS['TL_DCA']['tl_page']['fields']['alias']['load_callback'][] = array('tl_page_folderurl', 'hideParentAlias');
-
-$GLOBALS['TL_DCA']['tl_page']['fields']['languageAlias'] = array
-(
-	'label'			=> &$GLOBALS['TL_LANG']['tl_page']['languageAlias'],
-	'inputType'		=> 'radio',
-	'default'		=> 'none',
-	'options'		=> array('none', 'left', 'right'),
-	'reference'		=> &$GLOBALS['TL_LANG']['tl_page']['languageAlias'],
-	'eval'			=> array('tl_class'=>'w50" style="height:auto'),
-);
 
 $GLOBALS['TL_DCA']['tl_page']['fields']['folderAlias'] = array
 (
@@ -180,7 +170,7 @@ class tl_page_folderurl extends tl_page
 
 				if ($objParentPage->numRows && ($objParentPage->type == 'root' || $objParentPage->pid > 0))
 				{
-					$arrDomains[] = ($objParentPage->languageAlias == 'left' || $objParentPage->languageAlias == 'right') ? ($objParentPage->dns.'/'.$objParentPage->language) : $objParentPage->dns;
+					$arrDomains[] = $objParentPage->dns;
 				}
 				else
 				{

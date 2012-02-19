@@ -12,7 +12,6 @@
 -- 
 
 CREATE TABLE `tl_page` (
-  `languageAlias` varchar(8) NOT NULL default '',
   `folderAlias` char(1) NOT NULL default '',
   `subAlias` char(1) NOT NULL default '',
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;

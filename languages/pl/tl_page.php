@@ -30,13 +30,4 @@
  * Fields
  */
 $GLOBALS['TL_LANG']['tl_page']['folderAlias']		= array('Generuj alias folderu', 'Wybierz, jeżeli chcesz generować alias strony zawierający alias strony nadrzędnej (folder/strona).');
-$GLOBALS['TL_LANG']['tl_page']['languageAlias']		= array('Dodaj język do aliasu', 'Wybierz, jeżeli chcesz dodać język do aliasu strony np. alias.en.');
-
-
-/**
- * References
- */
-$GLOBALS['TL_LANG']['tl_page']['languageAlias']['none']		= 'Nie dodawaj';
-$GLOBALS['TL_LANG']['tl_page']['languageAlias']['left']		= 'Dodaj z lewej (en/alias)';
-$GLOBALS['TL_LANG']['tl_page']['languageAlias']['right']	= 'Dodaj z prawej (alias.en)';
 

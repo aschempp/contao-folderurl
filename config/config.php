@@ -31,7 +31,6 @@
  */
 $GLOBALS['TL_HOOKS']['addCustomRegexp'][] = array('FolderURL', 'validateRegexp');
 $GLOBALS['TL_HOOKS']['getPageIdFromUrl'][] = array('FolderURL', 'findAlias');
-$GLOBALS['TL_HOOKS']['generateFrontendUrl'][] = array('FolderURL', 'appendLanguageIdentifier');
 
 
 /**

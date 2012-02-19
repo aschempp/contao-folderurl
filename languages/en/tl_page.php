@@ -29,15 +29,6 @@
 /**
  * Fields
  */
-$GLOBALS['TL_LANG']['tl_page']['languageAlias']		= array('Append language to alias', 'Select if you want to append the language to the page alias (eg. alias.en).');
 $GLOBALS['TL_LANG']['tl_page']['folderAlias']		= array('Generate folder alias', 'Check here if you want to generate page alias including parent page alias (folder-like).');
 $GLOBALS['TL_LANG']['tl_page']['subAlias']			= array('Generate alias for empty subpages', 'Generate an alias for subpages if it is empty.');
-
-
-/**
- * References
- */
-$GLOBALS['TL_LANG']['tl_page']['languageAlias']['none']		= 'Do not append';
-$GLOBALS['TL_LANG']['tl_page']['languageAlias']['left']		= 'Append left (en/alias)';
-$GLOBALS['TL_LANG']['tl_page']['languageAlias']['right']	= 'Append right (alias.en)';
 
